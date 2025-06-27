@@ -149,61 +149,42 @@
 		let selectedFiles = [...e.target.files];
 		const processedFiles = await Promise.all(selectedFiles.map(async (file) => {
 			if ((file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic"))) {
-				// Try browser conversion only (GitHub Pages = static hosting)
 				if (typeof heic2any !== "undefined") {
 					try {
-						if (file.size > 15 * 1024 * 1024) {
-							const msg = '<div class="alert alert-danger" style="margin-top:10px;">HEIC file is very large and may not convert in the browser. Try a smaller file.</div>';
-							if (document.getElementById('uploadMessage')) {
-								document.getElementById('uploadMessage').innerHTML = msg;
-							}
-							return null;
+						const convertedBlob = await heic2any({
+							blob: file,
+							toType: "image/jpeg",
+							quality: 0.8
+						});
+						const outBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+						const jpegFile = new File([outBlob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+
+						// Show a download button for the converted file (bonus UX)
+						const downloadLink = document.createElement("a");
+						downloadLink.href = URL.createObjectURL(outBlob);
+						downloadLink.download = file.name.replace(/\.heic$/i, ".jpg");
+						downloadLink.textContent = "Download Converted JPG";
+						downloadLink.className = "sg-btn sg-btn-green";
+						const msg = '<div class="alert alert-success" style="margin-top:10px;">HEIC converted! <span id="heic-download-btn"></span></div>';
+						if (document.getElementById('uploadMessage')) {
+							document.getElementById('uploadMessage').innerHTML = msg;
+							document.getElementById('heic-download-btn').appendChild(downloadLink);
 						}
-						let converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-						if (converted && converted.length && converted[0].size > 100) {
-							const jpegFile = new File([converted[0]], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
-							return jpegFile;
-						} else {
-							// Try PNG fallback
-							try {
-								converted = await heic2any({ blob: file, toType: "image/png" });
-								if (converted && converted.length && converted[0].size > 100) {
-									const pngFile = new File([converted[0]], file.name.replace(/\.heic$/i, ".png"), { type: "image/png" });
-									return pngFile;
-								}
-							} catch (err2) {}
-						}
-					} catch (err) {}
-				}
-				// If browser conversion fails, try server-side conversion
-				try {
-					const formData = new FormData();
-					formData.append('file', file);
-					const response = await fetch('http://localhost:3001/api/convert-heic', {
-						method: 'POST',
-						body: formData
-					});
-					if (response.ok) {
-						const contentType = response.headers.get('Content-Type');
-						const blob = await response.blob();
-						let ext = 'jpg';
-						if (contentType === 'image/png') ext = 'png';
-						const convertedFile = new File([blob], file.name.replace(/\.heic$/i, `.${ext}`), { type: contentType });
-						return convertedFile;
-					} else {
-						const msg = '<div class="alert alert-danger" style="margin-top:10px;">HEIC file could not be converted by the server. Please use a desktop converter or another online tool.</div>';
+
+						return jpegFile;
+					} catch (err) {
+						const msg = '<div class="alert alert-danger" style="margin-top:10px;">HEIC conversion failed in the browser. Try a different file or use a desktop converter.</div>';
 						if (document.getElementById('uploadMessage')) {
 							document.getElementById('uploadMessage').innerHTML = msg;
 						}
 						return null;
 					}
-				} catch (err) {
-					const msg = '<div class="alert alert-danger" style="margin-top:10px;">This HEIC file cannot be converted in the browser or by the server. Please use a desktop converter or another online tool that supports server-side conversion.</div>';
-					if (document.getElementById('uploadMessage')) {
-						document.getElementById('uploadMessage').innerHTML = msg;
-					}
-					return null;
 				}
+				const msg = '<div class="alert alert-danger" style="margin-top:10px;">HEIC conversion is not supported in this browser. Please use a desktop converter or another online tool.</div>';
+				if (document.getElementById('uploadMessage')) {
+					document.getElementById('uploadMessage').innerHTML = msg;
+				}
+				return null;
 			}
 			return file;
 		}));
