@@ -174,7 +174,12 @@
 					} catch (err) {}
 				}
 				// If browser conversion fails, show user-friendly message
-				alert("This HEIC file cannot be converted in the browser. Please use a desktop converter or another online tool that supports server-side conversion.");
+				const msg = '<div class="alert alert-danger" style="margin-top:10px;">This HEIC file cannot be converted in the browser. <br>Please use a desktop converter or another online tool that supports server-side conversion.</div>';
+				if (document.getElementById('uploadMessage')) {
+					document.getElementById('uploadMessage').innerHTML = msg;
+				} else {
+					alert('This HEIC file cannot be converted in the browser. Please use a desktop converter or another online tool that supports server-side conversion.');
+				}
 				return null;
 			}
 			return file;
@@ -451,5 +456,14 @@
 		widthInput.value = "";
 		heightInput.value = "";
 		updateResizeLabel();
+	});
+
+	// Add a container for error/info messages below the upload area
+	$(document).ready(function() {
+		if (!document.getElementById('uploadMessage')) {
+			$('#uploadArea').after('<div id="uploadMessage" style="margin-top:10px;"></div>');
+		}
+		// Add a static help message about HEIC support
+		$('#uploadMessage').append('<div class="alert alert-info" style="font-size:0.95em;">HEIC support is limited in browsers. If your HEIC file fails to convert, please use a desktop converter or try a different online tool that supports server-side conversion.</div>');
 	});
 })(jQuery);
