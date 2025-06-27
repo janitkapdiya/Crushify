@@ -159,17 +159,12 @@
 						const outBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
 						const jpegFile = new File([outBlob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
 
-						// Show a download button for the converted file (bonus UX)
-						const downloadLink = document.createElement("a");
-						downloadLink.href = URL.createObjectURL(outBlob);
-						downloadLink.download = file.name.replace(/\.heic$/i, ".jpg");
-						downloadLink.textContent = "Download Converted JPG";
-						downloadLink.className = "sg-btn sg-btn-green";
-						const msg = '<div class="alert alert-success" style="margin-top:10px;">HEIC converted! <span id="heic-download-btn"></span></div>';
-						if (document.getElementById('uploadMessage')) {
-							document.getElementById('uploadMessage').innerHTML = msg;
-							document.getElementById('heic-download-btn').appendChild(downloadLink);
-						}
+						// Remove the HEIC converted message and download button
+						// const msg = '<div class="alert alert-success" style="margin-top:10px;">HEIC converted! <span id="heic-download-btn"></span></div>';
+						// if (document.getElementById('uploadMessage')) {
+						//     document.getElementById('uploadMessage').innerHTML = msg;
+						//     document.getElementById('heic-download-btn').appendChild(downloadLink);
+						// }
 
 						return jpegFile;
 					} catch (err) {
@@ -467,7 +462,5 @@
 		if (!document.getElementById('uploadMessage')) {
 			$('#uploadArea').after('<div id="uploadMessage" style="margin-top:10px;"></div>');
 		}
-		// Add a static help message about HEIC support
-		$('#uploadMessage').append('<div class="alert alert-info" style="font-size:0.95em;">HEIC support is limited in browsers. If your HEIC file fails to convert, please use a desktop converter or try a different online tool that supports server-side conversion.</div>');
 	});
 })(jQuery);
